@@ -6318,9 +6318,18 @@ ResultType Script::DefineClassProperty(LPTSTR aBuf, bool aStatic, bool &aBufHasB
 	*name_end = 0; // Terminate for aBuf use below.
 	switch (class_object->GetOwnPropType(aBuf))
 	{
+	// Cases like the following were permitted prior to v2.0.27 due to a bug, but only when the
+	// setter is defined first.  Rather than prohibiting it, we now allow it both ways, and rely
+	// on AddFunc to detect conflicts such as having two getters.
+	//   prop {
+	//     set => MsgBox(value)
+	//   }
+	//   prop {
+	//     get => 42
+	//   }
+	//case Object::PropType::Dynamic:
+	//case Object::PropType::DynamicWithMethod:
 	case Object::PropType::Object:
-	case Object::PropType::DynamicValue: // get/set
-	case Object::PropType::DynamicMixed: // get/set and call
 		return ScriptError(ERR_DUPLICATE_DECLARATION, aBuf);
 	}
 	mClassProperty = class_object->DefineProperty(aBuf);
@@ -6947,11 +6956,9 @@ UserFunc *Script::AddFunc(LPCTSTR aFuncName, size_t aFuncNameLength, FuncDefType
 		}
 		else
 		{
-			switch (aClassObject->GetOwnPropType(key))
+			auto pt = aClassObject->GetOwnPropType(key);
+			if (pt == Object::PropType::Object || pt == Object::PropType::DynamicWithMethod)
 			{
-			case Object::PropType::Object:
-			case Object::PropType::DynamicMethod: // call
-			case Object::PropType::DynamicMixed: // get/set and call
 				ScriptError(ERR_DUPLICATE_DECLARATION, new_name);
 				return nullptr;
 			}
