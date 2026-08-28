@@ -6179,6 +6179,8 @@ ResultType Script::DefineClass(LPTSTR aBuf)
 		{
 			// Use this object as the class.  At least one other object already refers to it as mBase.
 			class_object = (Object *)result_token.object;
+			if (base_class == class_object || base_class->IsDerivedFrom(class_object))
+				return ClassResolutionError(_T("Invalid base class."), mClassName, base_class);
 			class_object->DeleteOwnProp(_T("Line")); // Remove the error reporting info.
 		}
 	}
@@ -6578,8 +6580,13 @@ ResultType Script::ResolveClasses()
 	if (!base)
 		return OK;
 	// There is at least one unresolved class.
+	return ClassResolutionError(_T("Unknown class."), name, base);
+}
+
+ResultType Script::ClassResolutionError(LPCTSTR aErrorText, LPCTSTR aName, Object *aObj)
+{
 	ExprTokenType token;
-	if (base->GetOwnProp(token, _T("Line")))
+	if (aObj->GetOwnProp(token, _T("Line")))
 	{
 		// In this case (an object in the mUnresolvedClasses list), it is always an integer
 		// containing the file index and line number:
@@ -6587,7 +6594,7 @@ ResultType Script::ResolveClasses()
 		mCombinedLineNumber = LineNumberType(token.value_int64);
 	}
 	mCurrLine = NULL;
-	return ScriptError(_T("Unknown class."), name);
+	return ScriptError(aErrorText, aName);
 }
 
 
