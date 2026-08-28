@@ -689,8 +689,9 @@ Object::~Object()
 				ASSERT(nested_size >= sizeof(Object));
 				for (size_t i = 0; i < count; ++i)
 				{
-					auto nested = (Object*)(nest -= nested_size); // Destruct right to left.
-					nested->~Object();
+					auto p = (Object*)(nest -= nested_size); // Destruct right to left.
+					if (*(UINT_PTR*)p) // vftbl initialized
+						p->~Object();
 				}
 			}
 		}
