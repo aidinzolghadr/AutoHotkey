@@ -8509,7 +8509,8 @@ LRESULT CALLBACK GuiWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPara
 			case NM_RCLICK:
 			case NM_RDBLCLK:
 				gui_event = GUI_EVENT_CONTEXTMENU;
-				event_info = 1 + ((LPNMITEMACTIVATE)lParam)->iItem;
+				if (control.hwnd == nmhdr.hwndFrom) // It's a ListView (not Header) notification.
+					event_info = 1 + ((LPNMITEMACTIVATE)lParam)->iItem;
 				// Post the event unconditionally rather than calling Event(), so that the Gui's
 				// ContextMenu handler can be called even if the control doesn't have one:
 				POST_AHK_GUI_ACTION(pgui->mHwnd, control_index, gui_event, event_info);
