@@ -9675,6 +9675,9 @@ bool GuiType::MsgMonitor(GuiControlType *aControl, UINT aMsg, WPARAM awParam, LP
 	if (g_nThreads >= g_MaxThreadsTotal)
 		return false;
 
+	if (g->Priority > 0)
+		return false;
+
 	ExprTokenType param[] = { aControl ? (IObject*)aControl : this, (__int64)awParam, (__int64)(DWORD_PTR)alParam, (__int64)aMsg };
 	InitNewThread(0, false, true);
 	g_script.mLastPeekTime = GetTickCount();
