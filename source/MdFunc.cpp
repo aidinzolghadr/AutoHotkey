@@ -490,6 +490,8 @@ bool MdFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aParam
 			ASSERT(!rt.mem_to_free || rt.symbol == SYM_STRING && rt.marker == rt.mem_to_free);
 			mem_to_free = rt.mem_to_free;
 			value.CopyValueFrom(rt);
+			if (value.symbol == SYM_MISSING) // Currently all output parameters of this type are expected to be "made blank" even when !g_script.BackCompatMode().
+				value.SetValue(_T(""), 0);
 #ifdef ENABLE_IMPLICIT_TOSTRING
 			// ResultTokens are allocated from rtp and Free() is called upon return,
 			// but in this case any memory or object contained by the contain will
@@ -533,8 +535,6 @@ bool MdFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aParam
 				result = var->AcceptNewMem(mem_to_free, value.marker_length);
 			else if (value.symbol == SYM_OBJECT)
 				result = var->AssignSkipAddRef(value.object);
-			else if (value.symbol == SYM_MISSING) // Currently all output parameters of this type are expected to be "made blank" even when !g_script.BackCompatMode().
-				result = var->AssignString();
 			else
 				result = var->Assign(value);
 		}
